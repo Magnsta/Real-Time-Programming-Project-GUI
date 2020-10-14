@@ -15,8 +15,20 @@ public class OnlyBoatGUI {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        System.out.println("testing dudes");
-        // TODO code application logic here
-    }
+
+    // create a common resource oneWriter
+    ThreadStarter oneWriter = new ThreadStarter();
     
+    // create 5 threads
+    DataWriter writer1 = new DataWriter(oneWriter, 1);
+    DataWriter writer2 = new DataWriter(oneWriter, 2);
+    DataWriter writer3 = new DataWriter(oneWriter, 3);
+    
+    // and start the threads (Java will call their run()-method)
+    writer1.start();
+    writer2.start();
+    writer3.start();
+  }
 }
+    
+
