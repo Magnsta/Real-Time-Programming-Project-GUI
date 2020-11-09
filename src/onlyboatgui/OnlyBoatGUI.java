@@ -1,34 +1,46 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package onlyboatgui;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 /**
- *
+ * 
  * @author stava
  */
-public class OnlyBoatGUI {
-
+public class OnlyBoatGUI 
+{
+    
     /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-
-    // create a common resource oneWriter
-    ThreadStarter oneWriter = new ThreadStarter();
+    * 
+    */
+    private static void createAndSHowGUI()
+    {
+        GUI frame = new GUI("ONLYBOAT GUI");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        frame.setBackground(Color.yellow);
+        frame.setPreferredSize(new Dimension(800,800));
+        frame.pack();
+        frame.setVisible(true);
+        frame.setLocationRelativeTo(null);     
+    }
     
-    // create 5 threads
-    DataWriter writer1 = new DataWriter(oneWriter, 1);
-    DataWriter writer2 = new DataWriter(oneWriter, 2);
-    DataWriter writer3 = new DataWriter(oneWriter, 3);
-    
-    // and start the threads (Java will call their run()-method)
-    writer1.start();
-    writer2.start();
-    writer3.start();
-  }
+    /**
+    * 
+    * @param args 
+    */
+    public static void main(String[] args) 
+    {
+        SwingUtilities.invokeLater(new Runnable() 
+        {              
+            @Override
+            public void run() 
+            {
+                createAndSHowGUI();
+            }
+        });
+    }
 }
-    
-
+ 
