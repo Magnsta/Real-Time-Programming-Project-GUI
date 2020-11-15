@@ -1,13 +1,3 @@
-/*
-*Simple GUI for semester project in subject true-time programming
-*Main goal of this GUI is to implement Threads and take into considertaion
-*the concept of thread safety.
-*This is achived through utilizing the SwingWorker class to 
-*do the background work and updating the GUI while the GUI remains
-*interactive for the end-user. 
-*
-*The visual aspect of the GUI has not been a priority
- */
 package onlyboatgui;
 
 import java.awt.Color;
@@ -33,7 +23,10 @@ import javax.swing.JLabel;
 import javax.swing.Timer;
 
 /**
- *
+ * * The GUI class. Adds the labels and buttons to the GUI frame.
+ * Aswell as assigning task to be excexuted by the SwingWorker threads
+ * Gathers incomming data through UDP.
+ * For our application it proved more beneficial to use UDP instead of TCP
  * @author stava
  */
 public class GUI extends JFrame
@@ -47,15 +40,19 @@ public class GUI extends JFrame
     public JButton startButton = new JButton("Start");
     public JButton stopButton = new JButton("Stop");
     
-    //String to store X, Y and Z values
+    //Global variables to store X, Y and Z values gathered from the UDP swingworker
+    //Variables updated in the GUI through the other swingworkers
     String ax = "";
     String ay = "";
     String az = "";
 
-    //Variable to start and stop GUI
+    //Variable that tracks if the GUI should start or stop
+    // when 0, GUI is idle/stopped
+    //when 1, GUI has started
     public int pressedOnce = 0;
     
     private static final long serialVersionUID = 1L; 
+    
     
     DatagramSocket serverSocket = new DatagramSocket(1610);
     GraphicsDevice myDevice;
@@ -63,7 +60,7 @@ public class GUI extends JFrame
     
     /**
      * 
-     * @param title
+     * @param title of GUI frame
      * @throws SocketException 
      */
     public GUI(String title) throws SocketException
@@ -72,7 +69,7 @@ public class GUI extends JFrame
 
         setLayout(new GridBagLayout());
   
-        //Sets GUI font
+        //General GUI custoomization
         Platform.setFont(new Font("serif", Font.BOLD, 28));
         PxLabel.setFont(new Font("serif", Font.BOLD, 28));
         PyLabel.setFont(new Font("serif", Font.BOLD, 28));
@@ -80,13 +77,13 @@ public class GUI extends JFrame
         startButton.setFont(new Font("serif",Font.BOLD,28));
         stopButton.setFont(new Font("serif",Font.BOLD,28));
                 
-        GridBagConstraints gc = new GridBagConstraints();
         startButton.setBackground(Color.green);
         stopButton.setBackground(Color.red);
   
-        //Add labels and buttons to GUI with position
+        GridBagConstraints gc = new GridBagConstraints();
         gc.fill = GridBagConstraints.NONE;
         
+        //Assigns location for labels and buttons
         gc.gridx = 1;
         gc.gridy = 1;
         gc.weightx = 1;
@@ -124,19 +121,17 @@ public class GUI extends JFrame
         gc.weighty = 1;
         add(stopButton, gc);
 
-
-        
-        ///////////
         /**
-         * Timer for updating the GUI
-         * Updates every 1000ms
+         * Timer class from swing library.
+         * Defines frequency for how often swingworkers should run
+         * Updates every specified ms
          */
-        Timer times = new Timer(200, (e) -> {
-            
+        Timer times = new Timer(200, (e) -> {  
         });
         
         /**
-         * 
+         * Swingworker thread responsible for updating the
+         * Xlabel value
          */
         ActionListener Xlabel = new ActionListener() {
             @Override
@@ -159,7 +154,8 @@ public class GUI extends JFrame
         };
         
         /**
-         * 
+         * Swingworker thread responsible for updating the
+         * Ylabel value
          */
         ActionListener Ylabel = new ActionListener() {
             @Override
@@ -182,7 +178,8 @@ public class GUI extends JFrame
         };
         
         /**
-         * 
+         * Swingworker thread responsible for updating the
+         * Zlabel value
          */
         ActionListener Zlabel = new ActionListener() {
             @Override
@@ -205,7 +202,8 @@ public class GUI extends JFrame
         };
         
         /**
-         * 
+         * Swingworker thread responsible for updating the
+         * platform state. true if stable, false if not stable
          */
         ActionListener PlatformState = new ActionListener() {
             @Override
@@ -238,7 +236,8 @@ public class GUI extends JFrame
         };
         
         /**
-         * 
+         * Swingworker thread responsible for 
+         * handling a process for when stop button is pressed
          */
         stopButton.addActionListener(new ActionListener() 
         {        
@@ -276,11 +275,10 @@ public class GUI extends JFrame
                 worker.execute();        
             }
         });
-        
- 
-        
+             
         /**
-         * 
+         * Swingworker thread responsible for 
+         * handling a process for when start button is pressed
          */
         startButton.addActionListener(new ActionListener() 
         {        
@@ -322,9 +320,10 @@ public class GUI extends JFrame
         });
     }
     
-    
-    /**
-         * 
+        /**
+         * Swingworker thread responsible for 
+         * handling the gathering process from the UDP.
+         * Saves the recived variables in global variables
          */
         ActionListener UDPlistener = new ActionListener() {
             @Override
@@ -333,8 +332,7 @@ public class GUI extends JFrame
                 {
                     @Override
                     protected String[] doInBackground() throws Exception 
-                    {
-                        
+                    {         
                         byte[] receiveData = new byte[10];
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
