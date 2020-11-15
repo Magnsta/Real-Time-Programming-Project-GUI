@@ -1,7 +1,12 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+*Simple GUI for semester project in subject true-time programming
+*Main goal of this GUI is to implement Threads and take into considertaion
+*the concept of thread safety.
+*This is achived through utilizing the SwingWorker class to 
+*do the background work and updating the GUI while the GUI remains
+*interactive for the end-user. 
+*
+*The visual aspect of the GUI has not been a priority
  */
 package onlyboatgui;
 
