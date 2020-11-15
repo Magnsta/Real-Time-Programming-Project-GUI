@@ -1,6 +1,7 @@
 package onlyboatgui;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -11,16 +12,22 @@ import java.awt.Window;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.SwingWorker;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.Timer;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  * * The GUI class. Adds the labels and buttons to the GUI frame.
@@ -31,21 +38,23 @@ import javax.swing.Timer;
  */
 public class GUI extends JFrame
 {    
+    
+    
     //Create labels and buttons to GUI
     public JLabel image = new JLabel();
     public JLabel Platform = new JLabel("Platform is stable: ");
-    public JLabel PxLabel = new JLabel(" X: ---");
-    public JLabel PyLabel = new JLabel(" Y: ---");
-    public JLabel PzLabel = new JLabel(" Z: ---");
+    public JLabel PxLabel = new JLabel(" Motor 1: ---");
+    public JLabel PyLabel = new JLabel(" Motor 2: ---");
+    public JLabel PzLabel = new JLabel(" Motor 3: ---");
     public JButton startButton = new JButton("Start");
     public JButton stopButton = new JButton("Stop");
     
     //Global variables to store X, Y and Z values gathered from the UDP swingworker
     //Variables updated in the GUI through the other swingworkers
-    String ax = "";
-    String ay = "";
-    String az = "";
-
+    String M1 = "";
+    String M2 = "";
+    String M3 = "";
+    
     //Variable that tracks if the GUI should start or stop
     // when 0, GUI is idle/stopped
     //when 1, GUI has started
@@ -63,40 +72,46 @@ public class GUI extends JFrame
      * @param title of GUI frame
      * @throws SocketException 
      */
-    public GUI(String title) throws SocketException
+    public GUI(String title) throws SocketException, IOException
     {
         super(title);
-
+        //Loads image to use as background
+        //Put iamge into a JLabel, not optimal solution
+        BufferedImage img = ImageIO.read(new File("C:\\Users\\stava\\Downloads\\RegTekEksamener\\moon.jpg"));                    
+        setContentPane(new JLabel(new ImageIcon(img)));                    
         setLayout(new GridBagLayout());
-  
-        //General GUI custoomization
-        Platform.setFont(new Font("serif", Font.BOLD, 28));
-        PxLabel.setFont(new Font("serif", Font.BOLD, 28));
-        PyLabel.setFont(new Font("serif", Font.BOLD, 28));
-        PzLabel.setFont(new Font("serif", Font.BOLD, 28));
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.gridwidth = GridBagConstraints.LINE_END;
+               
+        //Font customization and size
+        Platform.setFont(new Font("serif", Font.BOLD, 30));
+        PxLabel.setFont(new Font("serif", Font.BOLD, 35));
+        PyLabel.setFont(new Font("serif", Font.BOLD, 35));
+        PzLabel.setFont(new Font("serif", Font.BOLD, 35));
         startButton.setFont(new Font("serif",Font.BOLD,28));
         stopButton.setFont(new Font("serif",Font.BOLD,28));
-                
+        
+        //Color customization for button and label
         startButton.setBackground(Color.green);
         stopButton.setBackground(Color.red);
-  
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.fill = GridBagConstraints.NONE;
+        PxLabel.setForeground(Color.yellow);
+        PyLabel.setForeground(Color.yellow);
+        PzLabel.setForeground(Color.yellow);
+        Platform.setForeground(Color.yellow);
         
-        //Assigns location for labels and buttons
+        //Specify location for labels and buttons
         gc.gridx = 1;
         gc.gridy = 1;
         gc.weightx = 1;
         gc.weighty = 1;
         add(Platform, gc);
-
+        
         gc.gridx = 0;
         gc.gridy = 0;
         gc.weightx = 1;
         gc.weighty = 1;
         add(PxLabel, gc);
-        
-                
+                       
         gc.gridx = 0;
         gc.gridy = 1;
         gc.weightx = 1;
@@ -126,7 +141,7 @@ public class GUI extends JFrame
          * Defines frequency for how often swingworkers should run
          * Updates every specified ms
          */
-        Timer times = new Timer(200, (e) -> {  
+        Timer times = new Timer(500, (e) -> {  
         });
         
         /**
@@ -143,15 +158,20 @@ public class GUI extends JFrame
                     {
                         return true;
                     }
-                    //Safely update the GUI
+                    //Safely update the GUI from done()
                     protected void done()
                     {                                     
-                            PxLabel.setText(" X: "+ ax);                                                 
+                            if(pressedOnce !=0)
+                        {
+                            PxLabel.setText(" Motor 1: "+ M1);                                                           
+                    
+                        }                                                 
                     }           
                 };
                 worker.execute();        
             }
         };
+        
         
         /**
          * Swingworker thread responsible for updating the
@@ -167,10 +187,13 @@ public class GUI extends JFrame
                     {
                         return true;                        
                     }
-                    //Safely update the GUI
+                    //Safely update the GUI from done()
                     protected void done()
                     {                                   
-                            PyLabel.setText(" Y: "+ ay);                                                                        
+                            if(pressedOnce !=0)
+                        {
+                            PyLabel.setText(" Motor 2: "+ M2);                                                            
+                        }                                                                        
                     }           
                 };
                 worker.execute();        
@@ -191,11 +214,14 @@ public class GUI extends JFrame
                     {
                         return true;
                     }
-                    //Safely update the GUI
+                    //Safely update the GUI from done()
                     protected void done()
-                    {           
-                            PzLabel.setText(" Z: "+ az);                                                           
-                    }           
+                    { 
+                        if(pressedOnce !=0)
+                        {
+                            PzLabel.setText(" Motor 3: "+ M3);                                                           
+                        }
+                    }
                 };
                 worker.execute();        
             }
@@ -221,8 +247,11 @@ public class GUI extends JFrame
                         try
                         {
                             {
+                                if(pressedOnce != 0)
+                                {
                                 status = get();
-                                Platform.setText("Platform is stable: " + status);                
+                                Platform.setText("Platform is stable: " + status);      
+                                }
                             }
                         }
                         catch (InterruptedException | ExecutionException e)
@@ -244,35 +273,15 @@ public class GUI extends JFrame
             @Override
             public void actionPerformed(ActionEvent arg0) 
             {
-                SwingWorker<Integer,Void> worker = new SwingWorker<Integer, Void>() 
+                if(pressedOnce == 1)
                 {
-                    @Override
-                    protected Integer doInBackground() throws Exception 
-                    {
-                        return pressedOnce;
-                    }
-                    protected void done()
-                    {     
-                        try {
-                            int status = get();
-                            if(status >= 1)
-                            {
-                                pressedOnce = 0;
-                                PxLabel.setText(" X: ---");
-                                PyLabel.setText(" Y: ---");
-                                PzLabel.setText(" Z: ---");
-                                Platform.setText("Platform GUI Stoped");
-                                times.stop();
-                            }
-                            
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (ExecutionException ex) {
-                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                        }                        
-                    }           
-                };
-                worker.execute();        
+                    times.stop();
+                    pressedOnce = 0;
+                    PxLabel.setText(" Motor 1: ---");
+                    PyLabel.setText(" Motor 2: ---");
+                    PzLabel.setText(" Motor 3: ---");
+                    Platform.setText("Platform GUI Stoped");
+                }
             }
         });
              
@@ -285,37 +294,16 @@ public class GUI extends JFrame
             @Override
             public void actionPerformed(ActionEvent arg0) 
             {
-                SwingWorker<Integer,Void> worker = new SwingWorker<Integer, Void>() 
+                if(pressedOnce == 0)
                 {
-                    @Override
-                    protected Integer doInBackground() throws Exception 
-                    {
-                        return pressedOnce;
-                    }
-                    protected void done()
-                    {             
-                        int status;
-                        try {
-                            status = get();
-                            if(status == 0)
-                            {        
- 
-                                pressedOnce += 1;
-                                times.addActionListener(UDPlistener);
-                                times.addActionListener(Xlabel);
-                                times.addActionListener(Ylabel);
-                                times.addActionListener(Zlabel);
-                                times.addActionListener(PlatformState);
-                                times.start();              
-                            } 
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (ExecutionException ex) {
-                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                        }                        
-                    }           
-                };
-                worker.execute();        
+                    pressedOnce += 1;
+                    times.addActionListener(UDPlistener);
+                    times.addActionListener(Xlabel);
+                    times.addActionListener(Ylabel);
+                    times.addActionListener(Zlabel);
+                    times.addActionListener(PlatformState);
+                    times.start();              
+                }
             }
         });
     }
@@ -332,36 +320,37 @@ public class GUI extends JFrame
                 {
                     @Override
                     protected String[] doInBackground() throws Exception 
-                    {         
+                    {
+                        
                         byte[] receiveData = new byte[10];
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
                         receiveData = receivePacket.getData();
-                        String s = new String(receiveData);
-                        String[] splittest = s.split(":",2);
-                        return splittest;            
+                        String data = new String(receiveData);
+                        String [] splittedData = data.split(":",2);
+                        
+                        return splittedData; 
+
                     }
+                    //Updates the global variables 
                     protected void done()
                     {
-                        String ztest[];
+                        String guiData[];
                         try
                         {
                             {
-                                ztest = get();
-                                if(ztest[0].equals("M3"))
+                                guiData = get();
+                                if(guiData[0].equals("M1"))
                                 {
-                                    az = ztest[1];
-                                    System.out.println(az);
+                                    M1 = guiData[1];
                                 }
-                                if(ztest[0].equals("M2"))
+                                if(guiData[0].equals("M2"))
                                 {
-                                    ay = ztest[1];
-                                    System.out.println(ay);
+                                    M2 = guiData[1];
                                 }
-                                if(ztest[0].equals("M1"))
+                                if(guiData[0].equals("M3"))
                                 {
-                                    ax = ztest[1];
-                                    System.out.println(ax);
+                                    M3 = guiData[1];
                                 }        
                             }
                         }
