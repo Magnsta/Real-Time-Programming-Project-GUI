@@ -13,7 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.GraphicsDevice;
 import java.awt.Window;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -34,6 +33,7 @@ import javax.swing.Timer;
  */
 public class GUI extends JFrame
 {    
+    //Create labels and buttons to GUI
     public JLabel image = new JLabel();
     public JLabel Platform = new JLabel("Platform is stable: ");
     public JLabel PxLabel = new JLabel(" X: ---");
@@ -42,17 +42,17 @@ public class GUI extends JFrame
     public JButton startButton = new JButton("Start");
     public JButton stopButton = new JButton("Stop");
     
+    //String to store X, Y and Z values
     String ax = "";
     String ay = "";
     String az = "";
 
-
+    //Variable to start and stop GUI
     public int pressedOnce = 0;
     
     private static final long serialVersionUID = 1L; 
+    
     DatagramSocket serverSocket = new DatagramSocket(1610);
-
- 
     GraphicsDevice myDevice;
     Window myWindow;  
     
@@ -67,6 +67,7 @@ public class GUI extends JFrame
 
         setLayout(new GridBagLayout());
   
+        //Sets GUI font
         Platform.setFont(new Font("serif", Font.BOLD, 28));
         PxLabel.setFont(new Font("serif", Font.BOLD, 28));
         PyLabel.setFont(new Font("serif", Font.BOLD, 28));
@@ -78,8 +79,7 @@ public class GUI extends JFrame
         startButton.setBackground(Color.green);
         stopButton.setBackground(Color.red);
   
- //       image.add(new JLabel(new ImageIcon("C:\\\\Users\\\\stava\\\\Downloads\\\\DIGGE_BILDE_TV_STUA\\\\digge.jpg")));
-        
+        //Add labels and buttons to GUI with position
         gc.fill = GridBagConstraints.NONE;
         
         gc.gridx = 1;
@@ -124,9 +124,9 @@ public class GUI extends JFrame
         ///////////
         /**
          * Timer for updating the GUI
-         * Updates every 700ms
+         * Updates every 1000ms
          */
-        Timer times = new Timer(700, (e) -> {
+        Timer times = new Timer(200, (e) -> {
             
         });
         
@@ -136,15 +136,12 @@ public class GUI extends JFrame
         ActionListener Xlabel = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingWorker<String,String> worker = new SwingWorker<String, String>() 
+                SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
                 {
                     @Override
-                    protected String doInBackground() throws Exception 
+                    protected Boolean doInBackground() throws Exception 
                     {
-                        //String x = M1Value();
-                        //System.out.println("This is M1 value: "+x);
-                        String a = MxValue();
-                        return a;
+                        return true;
                     }
                     //Safely update the GUI
                     protected void done()
@@ -162,15 +159,12 @@ public class GUI extends JFrame
         ActionListener Ylabel = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingWorker<String,String> worker = new SwingWorker<String, String>() 
+                SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
                 {
                     @Override
-                    protected String doInBackground() throws Exception 
+                    protected Boolean doInBackground() throws Exception 
                     {
-                        //String y = M2Value();
-                        //System.out.println("This is M2 value: "+y);
-                        String a = MyValue();
-                        return a;                        
+                        return true;                        
                     }
                     //Safely update the GUI
                     protected void done()
@@ -188,20 +182,17 @@ public class GUI extends JFrame
         ActionListener Zlabel = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingWorker<String,String> worker = new SwingWorker<String, String>() 
+                SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
                 {
                     @Override
-                    protected String doInBackground() throws Exception 
+                    protected Boolean doInBackground() throws Exception 
                     {
-                        String a = MzValue();
-                        return a;
+                        return true;
                     }
                     //Safely update the GUI
                     protected void done()
                     {           
-                    
-                            PzLabel.setText(" Z: "+ az);                                                 
-                        
+                            PzLabel.setText(" Z: "+ az);                                                           
                     }           
                 };
                 worker.execute();        
@@ -249,23 +240,18 @@ public class GUI extends JFrame
             @Override
             public void actionPerformed(ActionEvent arg0) 
             {
-                SwingWorker<Boolean,Void> worker = new SwingWorker<Boolean, Void>() 
+                SwingWorker<Integer,Void> worker = new SwingWorker<Integer, Void>() 
                 {
                     @Override
-                    protected Boolean doInBackground() throws Exception 
+                    protected Integer doInBackground() throws Exception 
                     {
-                        if(pressedOnce > 0)
-                        {
-                        return true;
-                        
-                        }
-                        return false;
+                        return pressedOnce;
                     }
                     protected void done()
                     {     
                         try {
-                            boolean status = get();
-                            if(status == true)
+                            int status = get();
+                            if(status >= 1)
                             {
                                 pressedOnce = 0;
                                 PxLabel.setText(" X: ---");
@@ -273,7 +259,6 @@ public class GUI extends JFrame
                                 PzLabel.setText(" Z: ---");
                                 Platform.setText("Platform GUI Stoped");
                                 times.stop();
-
                             }
                             
                         } catch (InterruptedException ex) {
@@ -297,35 +282,29 @@ public class GUI extends JFrame
             @Override
             public void actionPerformed(ActionEvent arg0) 
             {
-                SwingWorker<Boolean,Void> worker = new SwingWorker<Boolean, Void>() 
+                SwingWorker<Integer,Void> worker = new SwingWorker<Integer, Void>() 
                 {
                     @Override
-                    protected Boolean doInBackground() throws Exception 
+                    protected Integer doInBackground() throws Exception 
                     {
-                        
-                        if(pressedOnce == 0)
-                        {                           
-                            return true;
-                        }
-                        
-                        return false;
+                        return pressedOnce;
                     }
                     protected void done()
                     {             
-                        boolean status;
+                        int status;
                         try {
                             status = get();
-                            if(status == true)
-                            {                               
+                            if(status == 0)
+                            {        
+ 
                                 pressedOnce += 1;
+                                times.addActionListener(UDPlistener);
                                 times.addActionListener(Xlabel);
                                 times.addActionListener(Ylabel);
                                 times.addActionListener(Zlabel);
                                 times.addActionListener(PlatformState);
                                 times.start();              
                             } 
-                            
-                            
                         } catch (InterruptedException ex) {
                             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
                         } catch (ExecutionException ex) {
@@ -338,113 +317,58 @@ public class GUI extends JFrame
         });
     }
     
-    /**
-     * 
-     * @return
-     * @throws SocketException
-     * @throws IOException 
-     */
-    private String[] ListenWorker() throws SocketException, IOException
-    {
-        byte[] receiveData = new byte[10];
-        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        serverSocket.receive(receivePacket);
-        receiveData = receivePacket.getData();
-        String s = new String(receiveData);
-        String[] splittest = s.split(":",2);
-        return splittest;   
-    }
     
     /**
-    * 
-    * @return
-    * @throws IOException 
-    */    
-    private String MxValue() throws IOException{
-        String ztest[];
-        ztest = ListenWorker();
-        if(ztest[0].equals("M1"))
-        {
-            ax = ztest[1];
-            System.out.println(ax);
-            return ztest[1];
-        }
-        if(ztest[0].equals("M2"))
-        {
-            ay = ztest[1];
-            System.out.println(ay);
-            return ztest[1];
-        }
-        if(ztest[0].equals("M3"))
-        {
-            az = ztest[1];
-            System.out.println(az);
-            return ztest[1];
-        }
-        System.out.println(az);
-        return ax;
-    }
-    
-    /**
-     * 
-     * @return
-     * @throws IOException 
-     */
-     private String MyValue() throws IOException{
-        String ztest[];
-        ztest = ListenWorker();
-        if(ztest[0].equals("M2"))
-        {
-            ay = ztest[1];
-            System.out.println(ay);
-            return ztest[1];
-        }
-        if(ztest[0].equals("M3"))
-        {
-            az = ztest[1];
-            System.out.println(az);
-            return ztest[1];
-        }
-        if(ztest[0].equals("M1"))
-        {
-            ax = ztest[1];
-            System.out.println(ax);
-            return ztest[1];
-        }
-        System.out.println(az);
-        return ay;
-    }
-     
-     
-     /**
-      * 
-      * @return
-      * @throws IOException 
-      */
-      private String MzValue() throws IOException{
-        String ztest[];
-        ztest = ListenWorker();
-        if(ztest[0].equals("M3"))
-        {
-            az = ztest[1];
-            System.out.println(az);
-            return ztest[1];
-        }
-        if(ztest[0].equals("M2"))
-        {
-            ay = ztest[1];
-            System.out.println(ay);
-            return ztest[1];
-        }
-        if(ztest[0].equals("M1"))
-        {
-            ax = ztest[1];
-            System.out.println(ax);
-            return ztest[1];
-        }
-        System.out.println(az);
-        return az;
-    }
-
-               
+         * 
+         */
+        ActionListener UDPlistener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SwingWorker<String[],Boolean> worker = new SwingWorker<String[], Boolean>() 
+                {
+                    @Override
+                    protected String[] doInBackground() throws Exception 
+                    {
+                        
+                        byte[] receiveData = new byte[10];
+                        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                        serverSocket.receive(receivePacket);
+                        receiveData = receivePacket.getData();
+                        String s = new String(receiveData);
+                        String[] splittest = s.split(":",2);
+                        return splittest;            
+                    }
+                    protected void done()
+                    {
+                        String ztest[];
+                        try
+                        {
+                            {
+                                ztest = get();
+                                if(ztest[0].equals("M3"))
+                                {
+                                    az = ztest[1];
+                                    System.out.println(az);
+                                }
+                                if(ztest[0].equals("M2"))
+                                {
+                                    ay = ztest[1];
+                                    System.out.println(ay);
+                                }
+                                if(ztest[0].equals("M1"))
+                                {
+                                    ax = ztest[1];
+                                    System.out.println(ax);
+                                }        
+                            }
+                        }
+                        catch (InterruptedException | ExecutionException e)
+                        {
+                            System.out.println(e);
+                        }                    
+                    }           
+                };
+                worker.execute();                        
+            }
+        };        
 }
