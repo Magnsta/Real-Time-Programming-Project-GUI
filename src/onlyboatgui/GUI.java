@@ -1,7 +1,6 @@
 package onlyboatgui;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -17,17 +16,19 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.SwingWorker;
+import java.awt.Image;
+import java.awt.Graphics;
+import java.awt.Dimension;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.Timer;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  * * The GUI class. Adds the labels and buttons to the GUI frame.
@@ -39,21 +40,36 @@ import javax.swing.UnsupportedLookAndFeelException;
 public class GUI extends JFrame
 {    
     
-    
+    JPanel panelTwo = new JPanel();
     //Create labels and buttons to GUI
     public JLabel image = new JLabel();
-    public JLabel Platform = new JLabel("Platform is stable: ");
-    public JLabel PxLabel = new JLabel(" Motor 1: ---");
-    public JLabel PyLabel = new JLabel(" Motor 2: ---");
-    public JLabel PzLabel = new JLabel(" Motor 3: ---");
-    public JButton startButton = new JButton("Start");
-    public JButton stopButton = new JButton("Stop");
+    String a = "test";
+    
+    private JLabel Platform = new JLabel("Platform is stable: ");
+    private JLabel Motor1 = new JLabel(" Motor 1: ---");
+    private JLabel Motor2 = new JLabel(" Motor 2: ---");
+    private JLabel Motor3 = new JLabel(" Motor 3: ---");
+    private JButton startButton = new JButton("Start");
+    private JButton stopButton = new JButton("Stop");
+    private JButton changePane = new JButton("Project information");
+    private JButton goBack = new JButton("Return");
+    private JLabel info = new JLabel("<html><br/> The goal of this project was to create a boat with an <br/> stabilized platform to counter the waves <br/> The points of the project was to explore <br/> and learn about real time programming and"
+            + " <br/> how to implement threads and multi-threading in a thread safe way <br/><br/><br/> The group consists of four automation engineer students, Magnus Stava, <br/> Sophus Stokke Fredborg, Markus Grorud Gaasholt and Kaung Htet San <br/>"
+            + "<br/> The project have three required points that has to be included <br/><br/> 1. Programmed in Object Oriented Java <br/> 2. Multi-threading,thread-safe and real-time <br/><br/><br/></html>");
+    private JLabel intro = new JLabel("<html>This is the final project in subject IE303812<br/></html>");
+
+    //private JLabel info = new JLabel("testing");
+    
     
     //Global variables to store X, Y and Z values gathered from the UDP swingworker
     //Variables updated in the GUI through the other swingworkers
     String M1 = "";
     String M2 = "";
     String M3 = "";
+    
+    String M1old = "";
+    String M2old = "";
+    String M3old = "";
     
     //Variable that tracks if the GUI should start or stop
     // when 0, GUI is idle/stopped
@@ -77,28 +93,36 @@ public class GUI extends JFrame
         super(title);
         //Loads image to use as background
         //Put iamge into a JLabel, not optimal solution
-        BufferedImage img = ImageIO.read(new File("C:\\Users\\stava\\Downloads\\RegTekEksamener\\moon.jpg"));                    
-        setContentPane(new JLabel(new ImageIcon(img)));                    
+        BufferedImage img = ImageIO.read(new File("C:\\Users\\stava\\Downloads\\gave digge\\water_final.jpg"));
+        JLabel main = new JLabel(new ImageIcon(img));
+        getContentPane().add(panelTwo);
+        setContentPane(main);
         setLayout(new GridBagLayout());
         GridBagConstraints gc = new GridBagConstraints();
-        gc.gridwidth = GridBagConstraints.LINE_END;
+        gc.gridwidth = GridBagConstraints.BOTH;
                
         //Font customization and size
-        Platform.setFont(new Font("serif", Font.BOLD, 30));
-        PxLabel.setFont(new Font("serif", Font.BOLD, 35));
-        PyLabel.setFont(new Font("serif", Font.BOLD, 35));
-        PzLabel.setFont(new Font("serif", Font.BOLD, 35));
+        Platform.setFont(new Font("arial", Font.BOLD, 35));
+        Motor1.setFont(new Font("serif", Font.BOLD, 35));
+        Motor2.setFont(new Font("serif", Font.BOLD, 35));
+        Motor3.setFont(new Font("serif", Font.BOLD, 35));
+        info.setFont(new Font("Times new roman", Font.BOLD, 30));
+        intro.setFont(new Font("serif", Font.BOLD, 40));
         startButton.setFont(new Font("serif",Font.BOLD,28));
         stopButton.setFont(new Font("serif",Font.BOLD,28));
+        changePane.setFont(new Font("serif",Font.BOLD,35));
+        goBack.setFont(new Font("serif",Font.BOLD,35));
         
         //Color customization for button and label
         startButton.setBackground(Color.green);
         stopButton.setBackground(Color.red);
-        PxLabel.setForeground(Color.yellow);
-        PyLabel.setForeground(Color.yellow);
-        PzLabel.setForeground(Color.yellow);
-        Platform.setForeground(Color.yellow);
-        
+        Motor1.setForeground(Color.black);
+        Motor2.setForeground(Color.black);
+        Motor3.setForeground(Color.black);
+        Platform.setForeground(Color.black);
+        changePane.setForeground(Color.black);
+        intro.setForeground(Color.black);
+        info.setForeground(Color.white);
         //Specify location for labels and buttons
         gc.gridx = 1;
         gc.gridy = 1;
@@ -110,19 +134,19 @@ public class GUI extends JFrame
         gc.gridy = 0;
         gc.weightx = 1;
         gc.weighty = 1;
-        add(PxLabel, gc);
+        add(Motor1, gc);
                        
         gc.gridx = 0;
         gc.gridy = 1;
         gc.weightx = 1;
         gc.weighty = 1;
-        add(PyLabel, gc);
+        add(Motor2, gc);
 
         gc.gridx = 0;
         gc.gridy = 2;
         gc.weightx = 1;
         gc.weighty = 1;
-        add(PzLabel, gc);
+        add(Motor3, gc);
         
         gc.gridx = 1;
         gc.gridy = 2;
@@ -135,6 +159,30 @@ public class GUI extends JFrame
         gc.weightx = 1;
         gc.weighty = 1;
         add(stopButton, gc);
+          
+        gc.gridx = 0;
+        gc.gridy = 2;
+        gc.weightx = 1;
+        gc.weighty = 1;
+        panelTwo.add(intro, gc);
+        
+        gc.gridx = 0;
+        gc.gridy = 2;
+        gc.weightx = 1;
+        gc.weighty = 1;
+        panelTwo.add(info, gc);
+        
+        gc.gridx = 1;
+        gc.gridy = 2;
+        gc.weightx = 1;
+        gc.weighty = 2;
+        panelTwo.add(goBack, gc);
+
+        gc.gridx = 2;
+        gc.gridy = 0;
+        gc.weightx = 1;
+        gc.weighty = 1;
+        add(changePane, gc);
 
         /**
          * Timer class from swing library.
@@ -145,27 +193,36 @@ public class GUI extends JFrame
         });
         
         /**
-         * Swingworker thread responsible for updating the
-         * Xlabel value
+         * Swingworker thread responsible for keeping Motor 1 label updated. 
+         * M1Label value to update the GUI with
          */
-        ActionListener Xlabel = new ActionListener() {
+        ActionListener M1Label = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
                 {
                     @Override
+                    //doInBackground task is given to a new thread
                     protected Boolean doInBackground() throws Exception 
-                    {
-                        return true;
+                    {   
+                        
+                        return (!M1.equals(M1old));
                     }
                     //Safely update the GUI from done()
+                    //done() is done from the Event Dispatch Thread (EDT)
                     protected void done()
-                    {                                     
-                            if(pressedOnce !=0)
-                        {
-                            PxLabel.setText(" Motor 1: "+ M1);                                                           
-                    
-                        }                                                 
+                    {
+                        boolean status;
+                        try {
+                            status = get();
+                            if(pressedOnce !=0||status)
+                            {
+                                Motor1.setText(" Motor 1: "+ M1);
+                                M1old = M1;
+                            }                                                 
+                        } catch (InterruptedException | ExecutionException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }           
                 };
                 worker.execute();        
@@ -177,7 +234,7 @@ public class GUI extends JFrame
          * Swingworker thread responsible for updating the
          * Ylabel value
          */
-        ActionListener Ylabel = new ActionListener() {
+        ActionListener M2Label = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
@@ -192,7 +249,7 @@ public class GUI extends JFrame
                     {                                   
                             if(pressedOnce !=0)
                         {
-                            PyLabel.setText(" Motor 2: "+ M2);                                                            
+                            Motor2.setText(" Motor 2: "+ M2);                                                            
                         }                                                                        
                     }           
                 };
@@ -204,7 +261,7 @@ public class GUI extends JFrame
          * Swingworker thread responsible for updating the
          * Zlabel value
          */
-        ActionListener Zlabel = new ActionListener() {
+        ActionListener M3Label = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
@@ -219,7 +276,7 @@ public class GUI extends JFrame
                     { 
                         if(pressedOnce !=0)
                         {
-                            PzLabel.setText(" Motor 3: "+ M3);                                                           
+                            Motor3.setText(" Motor 3: "+ M3);                                                           
                         }
                     }
                 };
@@ -277,10 +334,10 @@ public class GUI extends JFrame
                 {
                     times.stop();
                     pressedOnce = 0;
-                    PxLabel.setText(" Motor 1: ---");
-                    PyLabel.setText(" Motor 2: ---");
-                    PzLabel.setText(" Motor 3: ---");
-                    Platform.setText("Platform GUI Stoped");
+                    Motor1.setText(" Motor 1: ---");
+                    Motor2.setText(" Motor 2: ---");
+                    Motor3.setText(" Motor 3: ---");
+                    Platform.setText("Platform GUI Stopped");
                 }
             }
         });
@@ -298,16 +355,58 @@ public class GUI extends JFrame
                 {
                     pressedOnce += 1;
                     times.addActionListener(UDPlistener);
-                    times.addActionListener(Xlabel);
-                    times.addActionListener(Ylabel);
-                    times.addActionListener(Zlabel);
+                    times.addActionListener(M1Label);
+                    times.addActionListener(M2Label);
+                    times.addActionListener(M3Label);
                     times.addActionListener(PlatformState);
                     times.start();              
                 }
+                
+            }
+        });
+        
+                /**
+         * Swingworker thread responsible for 
+         * handling a process for when stop button is pressed
+         */
+        changePane.addActionListener(new ActionListener() 
+        {        
+            @Override
+            public void actionPerformed(ActionEvent arg0) 
+            {
+                if(pressedOnce == 1)
+                {
+                    times.stop();
+                }
+                    setContentPane(panelTwo);
+                    panelTwo.setBackground(Color.GRAY);
+                    setBackground(Color.yellow);
+                    setSize(500, 500);
+                    revalidate();
+                    pack();
+            }
+        });
+             
+        /**
+         * Swingworker thread responsible for 
+         * handling a process for when start button is pressed
+         */
+        goBack.addActionListener(new ActionListener() 
+        {        
+            @Override
+            public void actionPerformed(ActionEvent arg0) 
+            {
+                if(pressedOnce == 1)
+                {
+                    times.start();
+                }
+                    setContentPane(main);
+                    revalidate();
+                    pack();
             }
         });
     }
-    
+
         /**
          * Swingworker thread responsible for 
          * handling the gathering process from the UDP.
@@ -328,7 +427,6 @@ public class GUI extends JFrame
                         receiveData = receivePacket.getData();
                         String data = new String(receiveData);
                         String [] splittedData = data.split(":",2);
-                        
                         return splittedData; 
 
                     }
@@ -362,5 +460,36 @@ public class GUI extends JFrame
                 };
                 worker.execute();                        
             }
-        };        
+        };
+        
+         /**
+         * Swingworker thread for presentation purposes
+         * GenericSwingWorker 
+         */
+        ActionListener GenericSwingWorker = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SwingWorker<Void,Void> worker = new SwingWorker<Void, Void>() 
+                {
+                    @Override
+                    protected Void doInBackground() throws Exception 
+                    {   
+                        //doInBackground task is given to a new thread
+                        //Should be given more heavy work
+                        return null;
+                    }
+
+                    @Override
+                    protected void done()
+                    {
+                        //Safely update the GUI from done()
+                        //done() is done from the Event Dispatch Thread (EDT)
+                        //Should only be given lightweight work to avoid delays  
+                    }           
+                };
+                worker.execute();        
+            }
+        };
 }
+
+
