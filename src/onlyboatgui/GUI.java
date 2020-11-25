@@ -1,5 +1,4 @@
 package onlyboatgui;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -16,14 +15,11 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.ImageIcon;
 import javax.swing.SwingWorker;
-import java.awt.Image;
-import java.awt.Graphics;
-import java.awt.Dimension;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -42,9 +38,7 @@ public class GUI extends JFrame
     
     JPanel panelTwo = new JPanel();
     //Create labels and buttons to GUI
-    public JLabel image = new JLabel();
-    String a = "test";
-    
+    public JLabel image = new JLabel();    
     private JLabel Platform = new JLabel("Platform is stable: ");
     private JLabel Motor1 = new JLabel(" Motor 1: ---");
     private JLabel Motor2 = new JLabel(" Motor 2: ---");
@@ -53,23 +47,23 @@ public class GUI extends JFrame
     private JButton stopButton = new JButton("Stop");
     private JButton changePane = new JButton("Project information");
     private JButton goBack = new JButton("Return");
+    //Generic project description
     private JLabel info = new JLabel("<html><br/> The goal of this project was to create a boat with an <br/> stabilized platform to counter the waves <br/> The points of the project was to explore <br/> and learn about real time programming and"
             + " <br/> how to implement threads and multi-threading in a thread safe way <br/><br/><br/> The group consists of four automation engineer students, Magnus Stava, <br/> Sophus Stokke Fredborg, Markus Grorud Gaasholt and Kaung Htet San <br/>"
             + "<br/> The project have three required points that has to be included <br/><br/> 1. Programmed in Object Oriented Java <br/> 2. Multi-threading,thread-safe and real-time <br/><br/><br/></html>");
     private JLabel intro = new JLabel("<html>This is the final project in subject IE303812<br/></html>");
-
-    //private JLabel info = new JLabel("testing");
-    
     
     //Global variables to store X, Y and Z values gathered from the UDP swingworker
     //Variables updated in the GUI through the other swingworkers
-    String M1 = "";
-    String M2 = "";
-    String M3 = "";
+    int M1;
+    int M2;
+    int M3;
     
-    String M1old = "";
-    String M2old = "";
-    String M3old = "";
+    //Atomic integers to save the recived variabels values.
+    //Makes sure that every thread gets the latest value
+    private AtomicInteger Mt1 = new AtomicInteger(0);
+    private AtomicInteger Mt2 = new AtomicInteger(0);
+    private AtomicInteger Mt3 = new AtomicInteger(0);
     
     //Variable that tracks if the GUI should start or stop
     // when 0, GUI is idle/stopped
@@ -84,15 +78,15 @@ public class GUI extends JFrame
     Window myWindow;  
     
     /**
-     * 
+     * GUI class, generate the GUI with its methods
      * @param title of GUI frame
-     * @throws SocketException 
+     * @throws SocketException if an error occurs in the UDP network
      */
     public GUI(String title) throws SocketException, IOException
     {
         super(title);
         //Loads image to use as background
-        //Put iamge into a JLabel, not optimal solution
+        //Put image into a JLabel
         BufferedImage img = ImageIO.read(new File("C:\\Users\\stava\\Downloads\\gave digge\\water_final.jpg"));
         JLabel main = new JLabel(new ImageIcon(img));
         getContentPane().add(panelTwo);
@@ -101,7 +95,7 @@ public class GUI extends JFrame
         GridBagConstraints gc = new GridBagConstraints();
         gc.gridwidth = GridBagConstraints.BOTH;
                
-        //Font customization and size
+        //Font and size customization
         Platform.setFont(new Font("arial", Font.BOLD, 35));
         Motor1.setFont(new Font("serif", Font.BOLD, 35));
         Motor2.setFont(new Font("serif", Font.BOLD, 35));
@@ -123,6 +117,7 @@ public class GUI extends JFrame
         changePane.setForeground(Color.black);
         intro.setForeground(Color.black);
         info.setForeground(Color.white);
+        
         //Specify location for labels and buttons
         gc.gridx = 1;
         gc.gridy = 1;
@@ -186,8 +181,8 @@ public class GUI extends JFrame
 
         /**
          * Timer class from swing library.
-         * Defines frequency for how often swingworkers should run
-         * Updates every specified ms
+         * Defines time for how often swingworkers should run
+         * Updates every specified 500ms
          */
         Timer times = new Timer(500, (e) -> {  
         });
@@ -199,30 +194,23 @@ public class GUI extends JFrame
         ActionListener M1Label = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
+                SwingWorker<Boolean,Integer> worker = new SwingWorker<Boolean, Integer>() 
                 {
                     @Override
                     //doInBackground task is given to a new thread
                     protected Boolean doInBackground() throws Exception 
-                    {   
-                        
-                        return (!M1.equals(M1old));
+                    {                         
+                        return true;
                     }
                     //Safely update the GUI from done()
                     //done() is done from the Event Dispatch Thread (EDT)
+                    @Override
                     protected void done()
                     {
-                        boolean status;
-                        try {
-                            status = get();
-                            if(pressedOnce !=0||status)
-                            {
-                                Motor1.setText(" Motor 1: "+ M1);
-                                M1old = M1;
-                            }                                                 
-                        } catch (InterruptedException | ExecutionException ex) {
-                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        if(pressedOnce !=0)
+                        {   
+                            Motor1.setText(" Motor 1: "+ Mt1.get());
+                        }                                                 
                     }           
                 };
                 worker.execute();        
@@ -237,20 +225,22 @@ public class GUI extends JFrame
         ActionListener M2Label = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
+                SwingWorker<Boolean,Integer> worker = new SwingWorker<Boolean, Integer>() 
                 {
+                    //Generates a new thread and checks the variables. 
                     @Override
                     protected Boolean doInBackground() throws Exception 
                     {
-                        return true;                        
+                        return true;
                     }
                     //Safely update the GUI from done()
+                    @Override
                     protected void done()
-                    {                                   
-                            if(pressedOnce !=0)
-                        {
-                            Motor2.setText(" Motor 2: "+ M2);                                                            
-                        }                                                                        
+                    {
+                        if(pressedOnce !=0)
+                        {   
+                            Motor2.setText(" Motor 2: "+ Mt2.get());
+                        }                                                 
                     }           
                 };
                 worker.execute();        
@@ -264,7 +254,7 @@ public class GUI extends JFrame
         ActionListener M3Label = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SwingWorker<Boolean,String> worker = new SwingWorker<Boolean, String>() 
+                SwingWorker<Boolean,Integer> worker = new SwingWorker<Boolean,Integer>() 
                 {
                     @Override
                     protected Boolean doInBackground() throws Exception 
@@ -272,13 +262,14 @@ public class GUI extends JFrame
                         return true;
                     }
                     //Safely update the GUI from done()
+                    @Override
                     protected void done()
-                    { 
+                    {
                         if(pressedOnce !=0)
-                        {
-                            Motor3.setText(" Motor 3: "+ M3);                                                           
-                        }
-                    }
+                        {   
+                            Motor3.setText(" Motor 3: "+ Mt3.get());
+                        }                                                 
+                    }           
                 };
                 worker.execute();        
             }
@@ -298,6 +289,7 @@ public class GUI extends JFrame
                     {
                         return true;            
                     }
+                    @Override
                     protected void done()
                     {
                         boolean status;
@@ -322,7 +314,7 @@ public class GUI extends JFrame
         };
         
         /**
-         * Swingworker thread responsible for 
+         * Adds an actionListener responsible for 
          * handling a process for when stop button is pressed
          */
         stopButton.addActionListener(new ActionListener() 
@@ -343,7 +335,7 @@ public class GUI extends JFrame
         });
              
         /**
-         * Swingworker thread responsible for 
+         * Adds an actionListener responsible for 
          * handling a process for when start button is pressed
          */
         startButton.addActionListener(new ActionListener() 
@@ -365,8 +357,8 @@ public class GUI extends JFrame
             }
         });
         
-                /**
-         * Swingworker thread responsible for 
+         /**
+         * Adds actionListener responsible for 
          * handling a process for when stop button is pressed
          */
         changePane.addActionListener(new ActionListener() 
@@ -388,7 +380,7 @@ public class GUI extends JFrame
         });
              
         /**
-         * Swingworker thread responsible for 
+         * Adds actionListener responsible for 
          * handling a process for when start button is pressed
          */
         goBack.addActionListener(new ActionListener() 
@@ -408,9 +400,9 @@ public class GUI extends JFrame
     }
 
         /**
-         * Swingworker thread responsible for 
-         * handling the gathering process from the UDP.
-         * Saves the recived variables in global variables
+         * Swingworker thread opens a UDP client in a new thread. 
+         * Reads the recived data if there is any. 
+         * Saves the recived variables in global variables, available for other threads. 
          */
         ActionListener UDPlistener = new ActionListener() {
             @Override
@@ -418,6 +410,10 @@ public class GUI extends JFrame
                 SwingWorker<String[],Boolean> worker = new SwingWorker<String[], Boolean>() 
                 {
                     @Override
+                    /**
+                     * Opens a UDP listener. Split the recived String into identifier and label value. 
+                     * Updates the AtomicInteger variable
+                     */
                     protected String[] doInBackground() throws Exception 
                     {
                         
@@ -427,69 +423,36 @@ public class GUI extends JFrame
                         receiveData = receivePacket.getData();
                         String data = new String(receiveData);
                         String [] splittedData = data.split(":",2);
+                        
+                        if(splittedData[0].equals("M1"))
+                                {
+                                    M1 = Integer.parseInt(splittedData[1].trim());
+                                    if(Mt1.compareAndSet(Mt1.get(), M1)){
+                                    }
+                                }
+                                if(splittedData[0].equals("M2"))
+                                {
+                                    M2 = Integer.parseInt(splittedData[1].trim());
+                                    if(Mt2.compareAndSet(Mt2.get(), M2)){
+                                    }
+                                }
+                                if(splittedData[0].equals("M3"))
+                                {  
+                                    M3 = Integer.parseInt(splittedData[1].trim());                                    
+                                    if(Mt3.compareAndSet(Mt3.get(), M3)){
+                                    }
+                                }        
                         return splittedData; 
 
                     }
-                    //Updates the global variables 
+                    @Override
                     protected void done()
-                    {
-                        String guiData[];
-                        try
-                        {
-                            {
-                                guiData = get();
-                                if(guiData[0].equals("M1"))
-                                {
-                                    M1 = guiData[1];
-                                }
-                                if(guiData[0].equals("M2"))
-                                {
-                                    M2 = guiData[1];
-                                }
-                                if(guiData[0].equals("M3"))
-                                {
-                                    M3 = guiData[1];
-                                }        
-                            }
-                        }
-                        catch (InterruptedException | ExecutionException e)
-                        {
-                            System.out.println(e);
-                        }                    
+                    {               
                     }           
                 };
                 worker.execute();                        
             }
-        };
-        
-         /**
-         * Swingworker thread for presentation purposes
-         * GenericSwingWorker 
-         */
-        ActionListener GenericSwingWorker = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SwingWorker<Void,Void> worker = new SwingWorker<Void, Void>() 
-                {
-                    @Override
-                    protected Void doInBackground() throws Exception 
-                    {   
-                        //doInBackground task is given to a new thread
-                        //Should be given more heavy work
-                        return null;
-                    }
-
-                    @Override
-                    protected void done()
-                    {
-                        //Safely update the GUI from done()
-                        //done() is done from the Event Dispatch Thread (EDT)
-                        //Should only be given lightweight work to avoid delays  
-                    }           
-                };
-                worker.execute();        
-            }
-        };
+        };  
 }
 
 
